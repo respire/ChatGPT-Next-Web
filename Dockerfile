@@ -1,6 +1,7 @@
 ARG OPENAI_API_KEY
 ARG BASE_URL
 ARG DISABLE_GPT4=""
+ARG CUSTOM_MODELS=""
 
 FROM node:20-alpine AS base
 
@@ -21,6 +22,7 @@ ARG DISABLE_GPT4
 ENV OPENAI_API_KEY=$OPENAI_API_KEY
 ENV BASE_URL=$BASE_URL
 ENV DISABLE_GPT4=$DISABLE_GPT4
+ENV CUSTOM_MODELS=$CUSTOM_MODELS
 ENV HIDE_USER_API_KEY="1"
 ENV TZ="Asia/Tokyo"
 ENV NEXT_TELEMETRY_DISABLED="1"
@@ -41,6 +43,7 @@ ARG DISABLE_GPT4
 ENV OPENAI_API_KEY=$OPENAI_API_KEY
 ENV BASE_URL=$BASE_URL
 ENV DISABLE_GPT4=$DISABLE_GPT4
+ENV CUSTOM_MODELS=$CUSTOM_MODELS
 ENV HIDE_USER_API_KEY="1"
 ENV TZ="Asia/Tokyo"
 ENV NEXT_TELEMETRY_DISABLED="1"
@@ -53,4 +56,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/server ./.next/server
 
+RUN addgroup -g 1001 -S app; \
+    adduser -u 1001 -G app -D -h /app -S -H app; \
+    chown -R app:app /app
+
 EXPOSE 3000
+USER app:app
+CMD ["node", "server.js"]
