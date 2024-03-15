@@ -12,3 +12,5 @@ DOCKER_BUILDKIT=1 docker build --build-arg OPENAI_API_KEY=$GPT35_KEY \
              -f Dockerfile \
              -t alicetyan-gpt35:latest \
              .
+
+docker run --rm alicetyan-gpt35:latest env
