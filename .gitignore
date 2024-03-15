@@ -44,3 +44,7 @@ dev
 
 *.key
 *.key.pub
+
+# build script
+build35.sh
+build4.sh
