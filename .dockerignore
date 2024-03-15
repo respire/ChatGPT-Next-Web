@@ -6,3 +6,12 @@
 
 *.key
 *.key.pub
+
+alicetyan-*.tar.gz
+alicetyan-*.tar.gz
+
+alicetyan-*.tar
+alicetyan-*.tar
+
+build35.sh
+build4.sh
