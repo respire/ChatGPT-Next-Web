@@ -16,6 +16,8 @@ DOCKER_BUILDKIT=1 docker build --build-arg OPENAI_API_KEY=$GPT4_KEY \
 
 if [ "$PACKAGE" = '1' ]; then
   docker run --rm alicetyan-gpt4:latest env
+  rm -f alicetyan-gpt4.tar
+  rm -f alicetyan-gpt4.tar.gz
   docker save alicetyan-gpt4:latest -o alicetyan-gpt4.tar
   gzip alicetyan-gpt4.tar
 fi
