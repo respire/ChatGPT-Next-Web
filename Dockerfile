@@ -1,4 +1,9 @@
-FROM node:18-alpine AS base
+ARG OPENAI_API_KEY
+ARG BASE_URL
+ARG DISABLE_GPT4=""
+ARG CUSTOM_MODELS=""
+
+FROM node:20-alpine AS base
 
 FROM base AS deps
 
@@ -8,16 +13,23 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 
-RUN yarn config set registry 'https://registry.npmmirror.com/'
 RUN yarn install
 
 FROM base AS builder
+ARG OPENAI_API_KEY
+ARG BASE_URL
+ARG DISABLE_GPT4
+ARG CUSTOM_MODELS
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+ENV BASE_URL=$BASE_URL
+ENV DISABLE_GPT4=$DISABLE_GPT4
+ENV CUSTOM_MODELS=$CUSTOM_MODELS
+ENV HIDE_USER_API_KEY="1"
+ENV TZ="Asia/Tokyo"
+ENV NEXT_TELEMETRY_DISABLED="1"
+ENV NODE_ENV="production"
 
 RUN apk update && apk add --no-cache git
-
-ENV OPENAI_API_KEY=""
-ENV GOOGLE_API_KEY=""
-ENV CODE=""
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -26,39 +38,30 @@ COPY . .
 RUN yarn build
 
 FROM base AS runner
+ARG OPENAI_API_KEY
+ARG BASE_URL
+ARG DISABLE_GPT4
+ARG CUSTOM_MODELS
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+ENV BASE_URL=$BASE_URL
+ENV DISABLE_GPT4=$DISABLE_GPT4
+ENV CUSTOM_MODELS=$CUSTOM_MODELS
+ENV HIDE_USER_API_KEY="1"
+ENV TZ="Asia/Tokyo"
+ENV NEXT_TELEMETRY_DISABLED="1"
+ENV NODE_ENV="production"
+
 WORKDIR /app
-
-RUN apk add proxychains-ng
-
-ENV PROXY_URL=""
-ENV OPENAI_API_KEY=""
-ENV GOOGLE_API_KEY=""
-ENV CODE=""
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/server ./.next/server
 
-EXPOSE 3000
+RUN addgroup -g 1001 -S app; \
+    adduser -u 1001 -G app -D -h /app -S -H app; \
+    chown -R app:app /app
 
-CMD if [ -n "$PROXY_URL" ]; then \
-    export HOSTNAME="127.0.0.1"; \
-    protocol=$(echo $PROXY_URL | cut -d: -f1); \
-    host=$(echo $PROXY_URL | cut -d/ -f3 | cut -d: -f1); \
-    port=$(echo $PROXY_URL | cut -d: -f3); \
-    conf=/etc/proxychains.conf; \
-    echo "strict_chain" > $conf; \
-    echo "proxy_dns" >> $conf; \
-    echo "remote_dns_subnet 224" >> $conf; \
-    echo "tcp_read_time_out 15000" >> $conf; \
-    echo "tcp_connect_time_out 8000" >> $conf; \
-    echo "localnet 127.0.0.0/255.0.0.0" >> $conf; \
-    echo "localnet ::1/128" >> $conf; \
-    echo "[ProxyList]" >> $conf; \
-    echo "$protocol $host $port" >> $conf; \
-    cat /etc/proxychains.conf; \
-    proxychains -f $conf node server.js; \
-    else \
-    node server.js; \
-    fi
+EXPOSE 3000
+USER app:app
+CMD ["node", "server.js"]
