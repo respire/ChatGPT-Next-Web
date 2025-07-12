@@ -49,3 +49,6 @@ masks.json
 
 # mcp config
 app/mcp/mcp_config.json
+
+chatgpt-next-web.tar
+chatgpt-next-web.tar.gz
