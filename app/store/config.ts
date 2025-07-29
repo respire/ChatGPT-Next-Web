@@ -76,7 +76,7 @@ export const DEFAULT_CONFIG = {
     compressMessageLengthThreshold: 11000,
     compressModel: "",
     compressProviderName: "",
-    enableInjectSystemPrompts: true,
+    enableInjectSystemPrompts: false,
     template: config?.template ?? DEFAULT_INPUT_TEMPLATE,
     size: "1024x1024" as DalleSize,
     quality: "standard" as DalleQuality,
